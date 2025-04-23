@@ -118,6 +118,6 @@ Quiz_Master_App_MAD1/
 
 ## Developed By
 
-**Akshay KS**  
+### `Akshay KS`
 
 ---
