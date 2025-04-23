@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Quizzes - Quiz Master</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .subject-card {
+      margin-bottom: 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .subject-card .card-header {
+      background-color: #007bff;
+      color: #fff;
+      font-size: 1.25rem;
+      padding: 10px 15px;
+    }
+    .chapter-header {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-bottom: 1px solid #dee2e6;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .quiz-item {
+      padding: 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      transition: background-color 0.3s ease;
+    }
+    .quiz-item:hover {
+      background-color: #f1f1f1;
+    }
+    .quiz-details small {
+      display: block;
+      color: #6c757d;
+    }
+    .no-quizzes {
+      padding: 10px;
+      color: #6c757d;
+      font-style: italic;
+    }
+    .summary-section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('dashboard') }}">Quiz Master</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#navbarNav" aria-controls="navbarNav" 
+              aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Available Quizzes</h2>
+    
+    <!-- Summary Section -->
+    <div class="summary-section text-center mb-4">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Total Quizzes</h5>
+              <p class="display-5">{{ total_quizzes }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Attempted Quizzes</h5>
+              <p class="display-5">{{ total_attempted }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Available Quizzes</h5>
+              <p class="display-5">{{ total_available }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a href="{{ url_for('view_attempts') }}" class="btn btn-outline-primary mt-2">View Attempted Quizzes</a>
+    </div>
+    
+    <!-- Nested Subjects and Chapters (Available Quizzes) -->
+    {% for subject in subjects %}
+      <div class="card subject-card">
+        <div class="card-header">
+          {{ subject.name }}
+        </div>
+        <div class="card-body">
+          {% if subject.chapters %}
+            {% for chapter in subject.chapters %}
+              <div class="mb-3">
+                <div class="chapter-header">
+                  {{ chapter.title }}
+                </div>
+                <div class="list-group mt-2">
+                  {% if chapter.quizzes %}
+                    {% for quiz in chapter.quizzes %}
+                      <div class="list-group-item quiz-item d-flex justify-content-between align-items-center">
+                        <div class="quiz-details">
+                          <strong>{{ quiz.title }}</strong>
+                          <small>{{ quiz.remarks }}</small>
+                          <small>Date: {{ quiz.date_of_quiz }}</small>
+                          <small>Duration: {{ quiz.time_duration // 60 }}m {{ quiz.time_duration % 60 }}s</small>
+                        </div>
+                        <div>
+                          <a href="{{ url_for('attempt_quiz', quiz_id=quiz.id) }}" class="btn btn-sm btn-info">Attempt Quiz</a>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="list-group-item no-quizzes">No quizzes available</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="list-group-item no-quizzes">No chapters available under this subject.</div>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <p class="text-center text-muted">No subjects available.</p>
+    {% endfor %}
+    
+    <!-- Upcoming Quizzes Section -->
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <h4 class="mb-3">Upcoming Quizzes</h4>
+        <div class="list-group">
+          {% for quiz in upcoming_quizzes %}
+            <div class="list-group-item">
+              <span>⏳ {{ quiz.title }}</span>
+              <small class="text-muted">Starts on: {{ quiz.date_of_quiz }}</small>
+            </div>
+          {% else %}
+            <div class="list-group-item no-quizzes">No upcoming quizzes.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <p>&copy; 2025 Quiz Master. All rights reserved.</p>
+  </footer>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

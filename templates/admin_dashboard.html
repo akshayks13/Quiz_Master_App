@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Quiz Master</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .card-stats {
+      margin-bottom: 1rem;
+    }
+    .list-group-item > ul {
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Quiz Master (Admin)</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin_profile') }}">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Admin Dashboard</h2>
+    
+    <!-- Summary Cards -->
+    <div class="row text-center mb-4">
+      <div class="col-md-3 card-stats">
+        <div class="card border-primary">
+          <div class="card-body">
+            <h5 class="card-title">Subjects</h5>
+            <p class="card-text display-6">{{ total_subjects or 0 }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 card-stats">
+        <div class="card border-success">
+          <div class="card-body">
+            <h5 class="card-title">Chapters</h5>
+            <p class="card-text display-6">{{ total_chapters or 0 }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 card-stats">
+        <div class="card border-warning">
+          <div class="card-body">
+            <h5 class="card-title">Quizzes</h5>
+            <p class="card-text display-6">{{ total_quizzes or 0 }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 card-stats">
+        <div class="card border-info">
+          <div class="card-body">
+            <h5 class="card-title">Users</h5>
+            <p class="card-text display-6">{{ total_users or 0 }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Subjects, Chapters & Quizzes Section -->
+      <div class="col-md-6">
+        <h4>Subjects, Chapters & Quizzes</h4>
+        <a href="{{ url_for('manage_subjects') }}" class="btn btn-success mb-3">Manage</a>
+        <a href="{{ url_for('delete_all_quizzes') }}" class="btn btn-success mb-3">Delete All</a>
+        <ul class="list-group">
+          {% for subject in subjects %}
+            <li class="list-group-item">
+              <strong>{{ subject.name }}</strong>
+              {% if subject.chapters %}
+                <ul class="list-group mt-2">
+                  {% for chapter in subject.chapters %}
+                    <li class="list-group-item">
+                      {{ chapter.title }}
+                      {% if chapter.quizzes %}
+                        <ul class="list-group mt-2">
+                          {% for quiz in chapter.quizzes %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              <div>
+                                <span class="fw-bold">{{ quiz.title }}</span><br>
+                                <small>{{ quiz.remarks }}</small><br>
+                                <small>Duration: {{ quiz.time_duration // 60 }}m {{ quiz.time_duration % 60 }}s</small>
+                              </div>
+                              <div>
+                                <!-- Edit button triggers modal -->
+                                <button class="btn btn-sm btn-warning btn-edit" 
+                                        data-id="{{ quiz.id }}"
+                                        data-title="{{ quiz.title }}"
+                                        data-date="{{ quiz.date_of_quiz }}"
+                                        data-duration="{{ quiz.time_duration }}"
+                                        data-remarks="{{ quiz.remarks }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editQuizModal">
+                                    Edit
+                                </button>
+                                 <!-- Delete button triggers modal -->
+                                 <button class="btn btn-sm btn-danger btn-delete" 
+                                      data-id="{{ quiz.id }}"
+                                      data-title="{{ quiz.title }}"
+                                      data-bs-toggle="modal" 
+                                      data-bs-target="#deleteQuizModal">
+                                  Delete
+                                </button>
+                                <a href="{{ url_for('manage_questions', quiz_id=quiz.id) }}" class="btn btn-info btn-sm">Manage Questions</a>
+                              </div>
+                            </li>
+                          {% else %}
+                            <li class="list-group-item">No quizzes available.</li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="mb-0">No quizzes available.</p>
+                      {% endif %}
+                    </li>
+                  {% else %}
+                    <li class="list-group-item">No chapters available.</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="mb-0">No chapters available for this subject.</p>
+              {% endif %}
+            </li>
+          {% else %}
+            <li class="list-group-item">No subjects available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- User Management Section -->
+      <div class="col-md-6">
+        <h4>User Management</h4>
+        <a href="{{ url_for('manage_users') }}" class="btn btn-info mb-3">Manage Users</a>
+        <ul class="list-group">
+          {% for user in users %}
+            <li class="list-group-item">
+              {{ user.username }} - {{ user.email }}
+            </li>
+          {% else %}
+            <li class="list-group-item">No users available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+   <!-- Edit Quiz Modal -->
+   <div class="modal fade" id="editQuizModal" tabindex="-1" aria-labelledby="editQuizModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editQuizModalLabel">Edit Quiz</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editQuizForm" method="POST">
+            <input type="hidden" id="editQuizId" name="quiz_id">
+            <div class="mb-3">
+              <label for="editQuizTitle" class="form-label">Quiz Title</label>
+              <input type="text" class="form-control" id="editQuizTitle" name="title" required>
+            </div>
+            <div class="mb-3">
+              <label for="editQuizDate" class="form-label">Date and Time</label>
+              <input type="datetime-local" class="form-control" id="editQuizDate" name="date_of_quiz" required>
+            </div>
+            <div class="mb-3">
+              <label for="editQuizDuration" class="form-label">Duration (in seconds)</label>
+              <input type="number" class="form-control" id="editQuizDuration" name="time_duration" required>
+            </div>
+            <div class="mb-3">
+              <label for="editQuizRemarks" class="form-label">Remarks (Optional)</label>
+              <textarea class="form-control" id="editQuizRemarks" name="remarks"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Quiz</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Quiz Modal -->
+  <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-labelledby="deleteQuizModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteQuizModalLabel">Confirm Deletion</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete <strong id="deleteQuizName"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <p>&copy; 2025 Quiz Master. All rights reserved.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Handle Edit Quiz Modal
+      document.querySelectorAll(".btn-edit").forEach(button => {
+        button.addEventListener("click", function () {
+          document.getElementById("editQuizId").value = this.getAttribute("data-id");
+          document.getElementById("editQuizTitle").value = this.getAttribute("data-title");
+          document.getElementById("editQuizDate").value = this.getAttribute("data-date");
+          document.getElementById("editQuizDuration").value = this.getAttribute("data-duration");
+          document.getElementById("editQuizRemarks").value = this.getAttribute("data-remarks");
+          document.getElementById("editQuizForm").action = `/admin/edit_quiz/${this.getAttribute("data-id")}`;
+        });
+      });
+
+      // Handle Delete Quiz Modal
+      document.querySelectorAll(".btn-delete").forEach(button => {
+        button.addEventListener("click", function () {
+          const quizId = this.getAttribute("data-id");
+          const quizTitle = this.getAttribute("data-title");
+          document.getElementById("deleteQuizName").textContent = quizTitle;
+          document.getElementById("confirmDeleteBtn").href = `/admin/delete_quiz/${quizId}`;
+        });
+      });
+    });
+  </script>
+</body>
+</html>

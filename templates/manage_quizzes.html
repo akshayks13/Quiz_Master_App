@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Quizzes - Quiz Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="text-center">Manage Quizzes</h2>
+
+       <!-- Search Bar -->
+        <form class="d-flex mb-3" method="GET" action="{{ url_for('search_quizzes', chapter_id=chapter_id) }}">
+            <input class="form-control me-2" type="search" placeholder="Search Quizzes..." name="search" value="{{ search }}">
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+        </form>
+  
+
+        <!-- Add New Quiz Button -->
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuizModal">
+                Create New Quiz
+            </button>
+        </div>
+
+        <!-- Quizzes Table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quiz Title</th>
+                    <th>Chapter</th>
+                    <th>Date and Time</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="quizTableBody">
+                {% for quiz in quizzes %}
+                <tr>
+                    <td>{{ quiz.id }}</td>
+                    <td>{{ quiz.title }}</td>
+                    <td>{{ quiz.chapter_title }}</td>
+                    <td>{{ quiz.date_of_quiz }}</td>
+                    <td>{{ quiz.time_duration // 60 }}m {{ quiz.time_duration % 60 }}s</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning btn-edit" 
+                                data-id="{{ quiz.id }}"
+                                data-title="{{ quiz.title }}"
+                                data-date="{{ quiz.date_of_quiz }}"
+                                data-duration="{{ quiz.time_duration }}"
+                                data-remarks="{{ quiz.remarks }}"
+                                data-bs-toggle="modal" data-bs-target="#editQuizModal">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-delete" 
+                                data-id="{{ quiz.id }}" 
+                                data-title="{{ quiz.title }}"
+                                data-bs-toggle="modal" data-bs-target="#deleteQuizModal">
+                            Delete
+                        </button>
+                        <a href="{{ url_for('manage_questions', quiz_id=quiz.id) }}" class="btn btn-sm btn-info">
+                            Manage Questions
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Quiz Modal -->
+    <div class="modal fade" id="addQuizModal" tabindex="-1" aria-labelledby="addQuizModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addQuizModalLabel">Create New Quiz</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form method="POST" action="{{ url_for('manage_quizzes', chapter_id=chapter_id) }}">
+                <div class="mb-3">
+                  <label for="quizTitle" class="form-label">Quiz Title</label>
+                  <input type="text" class="form-control" id="quizTitle" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label for="quizDate" class="form-label">Date and Time</label>
+                  <input type="datetime-local" class="form-control" id="quizDate" name="date_of_quiz" required>
+                </div>
+                <div class="mb-3">
+                  <label for="quizDuration" class="form-label">Duration (in seconds)</label>
+                  <input type="number" class="form-control" id="quizDuration" name="time_duration" required>
+                </div>
+                <div class="mb-3">
+                  <label for="remarks" class="form-label">Remarks</label>
+                  <textarea class="form-control" id="remarks" name="remarks"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Quiz</button>
+              </form>
+            </div>
+          </div>
+        </div>
+    </div>      
+
+    <!-- Edit Quiz Modal -->
+    <div class="modal fade" id="editQuizModal" tabindex="-1" aria-labelledby="editQuizModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editQuizModalLabel">Edit Quiz</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="editQuizForm" method="POST">
+                <input type="hidden" id="editQuizId" name="quiz_id">
+                <div class="mb-3">
+                  <label for="editQuizTitle" class="form-label">Quiz Title</label>
+                  <input type="text" class="form-control" id="editQuizTitle" name="title" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editQuizDate" class="form-label">Date and Time</label>
+                  <input type="datetime-local" class="form-control" id="editQuizDate" name="date_of_quiz" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editQuizDuration" class="form-label">Duration (in seconds)</label>
+                  <input type="number" class="form-control" id="editQuizDuration" name="time_duration" required>
+                </div>
+                <div class="mb-3">
+                  <label for="editQuizRemarks" class="form-label">Remarks (Optional)</label>
+                  <textarea class="form-control" id="editQuizRemarks" name="remarks"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Quiz</button>
+              </form>
+            </div>
+          </div>
+        </div>
+    </div>
+      
+
+    <!-- Delete Quiz Modal -->
+    <div class="modal fade" id="deleteQuizModal" tabindex="-1" aria-labelledby="deleteQuizModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteQuizModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong id="deleteQuizName"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Script for Modals -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let editQuizModal = new bootstrap.Modal(document.getElementById("editQuizModal"));
+            let deleteQuizModal = new bootstrap.Modal(document.getElementById("deleteQuizModal"));
+    
+            // Handle Edit Quiz Modal
+            document.querySelectorAll(".btn-edit").forEach(button => {
+                button.addEventListener("click", function () {
+                    document.getElementById("editQuizId").value = this.getAttribute("data-id");
+                    document.getElementById("editQuizTitle").value = this.getAttribute("data-title");
+                    document.getElementById("editQuizDate").value = this.getAttribute("data-date");
+                    document.getElementById("editQuizDuration").value = this.getAttribute("data-duration");
+                    document.getElementById("editQuizRemarks").value = this.getAttribute("data-remarks");
+                    document.getElementById("editQuizForm").action = `/admin/edit_quiz/${this.getAttribute("data-id")}`;
+                    editQuizModal.show();
+                });
+            });
+    
+            // Handle Delete Quiz Modal
+            document.querySelectorAll(".btn-delete").forEach(button => {
+                button.addEventListener("click", function () {
+                    let quizId = this.getAttribute("data-id");
+                    let quizTitle = this.getAttribute("data-title");
+    
+                    document.getElementById("deleteQuizName").textContent = quizTitle;
+                    document.getElementById("confirmDeleteBtn").href = `/admin/delete_quiz/${quizId}`;
+    
+                    deleteQuizModal.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

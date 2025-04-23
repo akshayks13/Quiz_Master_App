@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Profile - Quiz Master</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .profile-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+    }
+    .card-header {
+      font-weight: bold;
+    }
+    .performance-table th, .performance-table td {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Quiz Master (Admin)</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin_profile') }}">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Admin Profile</h2>
+    <div class="row">
+      <!-- Admin Information Card -->
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            Profile Information
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <img src="{{ admin.profile_picture or url_for('static', filename='images/admin_profile.webp') }}" class="rounded-circle me-3 profile-img" alt="Profile Picture">
+              <div>
+                <h5 class="mb-0">{{ admin.username }}</h5>
+                <small class="text-muted">{{ admin.email }}</small>
+              </div>
+            </div>
+            <p class="mb-3"><strong>Role:</strong> Administrator</p>
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary btn-sm">Edit Profile</a>
+          </div>
+        </div>
+      </div>      
+
+      <!-- Quick Actions Card -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            Quick Actions
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <a href="{{ url_for('manage_subjects') }}" class="btn btn-outline-success w-100 mb-2">Manage Subjects</a>
+              </div>
+              <div class="col-md-4">
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline-info w-100 mb-2">Manage Users</a>
+              </div>
+            </div>
+            <h5 class="mb-3">Recent Quizzes</h5>
+            {% if recent_quizzes %}
+              <ul class="list-group">
+                {% for quiz in recent_quizzes %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ quiz.title }}
+                    <a href="{{ url_for('manage_questions', quiz_id=quiz.id) }}" class="btn btn-info btn-sm">Questions</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">No recent quizzes available.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Performance Metrics -->
+    <div class="row mt-5">
+      <!-- User Performance Metrics -->
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            User Performance Metrics
+          </div>
+          <div class="card-body">
+            {% if user_performance %}
+            <div class="table-responsive">
+              <table class="table table-bordered performance-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Attempts</th>
+                    <th>Average Score</th>
+                    <th>Total Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in user_performance %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.email }}</td>
+                    <td>{{ row.attempts }}</td>
+                    <td>{{ row.avg_score or 0 }}</td>
+                    <td>{{ row.total_score or 0 }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted">No user performance data available.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Subject Performance Metrics -->
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header bg-warning text-white">
+            Subject Performance Metrics
+          </div>
+          <div class="card-body">
+            {% if subject_performance %}
+            <div class="table-responsive">
+              <table class="table table-bordered performance-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>Subject ID</th>
+                    <th>Subject Name</th>
+                    <th>Attempts</th>
+                    <th>Average Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in subject_performance %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.attempts }}</td>
+                    <td>{{ row.avg_score or 0 }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted">No subject performance data available.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <p>&copy; 2025 Quiz Master. All rights reserved.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

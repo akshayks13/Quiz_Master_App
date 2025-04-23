@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Questions - Quiz Master</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h2 class="text-center">Manage Questions</h2>
+
+    <!-- Search Bar -->
+    <form class="d-flex mb-3" method="GET" action="{{ url_for('search_questions', quiz_id=quiz_id) }}">
+        <input type="hidden" name="quiz_id" value="{{ quiz_id }}">
+        <input class="form-control me-2" type="search" placeholder="Search Questions..." name="search" value="{{ search }}">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </form>      
+
+    <!-- Add New Question Button -->
+    <div class="d-flex justify-content-end mb-3">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+        Add New Question
+      </button>
+    </div>
+
+    <!-- Questions Table -->
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Question Text</th>
+          <th>Options</th>
+          <th>Correct Answer</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for question in questions %}
+        <tr>
+          <td>{{ question.id }}</td>
+          <td>{{ question.question_statement }}</td>
+          <td>
+            <ul class="list-unstyled mb-0">
+              <li>A. {{ question.option1 }}</li>
+              <li>B. {{ question.option2 }}</li>
+              <li>C. {{ question.option3 }}</li>
+              <li>D. {{ question.option4 }}</li>
+            </ul>
+          </td>
+          <td>{{ question.correct_answer }}</td>
+          <td>
+            <button class="btn btn-sm btn-warning btn-edit" 
+                    data-bs-toggle="modal" data-bs-target="#editQuestionModal"
+                    data-id="{{ question.id }}"
+                    data-text="{{ question.question_statement }}"
+                    data-option1="{{ question.option1 }}"
+                    data-option2="{{ question.option2 }}"
+                    data-option3="{{ question.option3 }}"
+                    data-option4="{{ question.option4 }}"
+                    data-correct="{{ question.correct_answer }}">
+              Edit
+            </button>
+            <button class="btn btn-sm btn-danger btn-delete" 
+                    data-bs-toggle="modal" data-bs-target="#deleteQuestionModal"
+                    data-id="{{ question.id }}"
+                    data-text="{{ question.question_statement }}">
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>      
+    </table>
+  </div>
+
+  <!-- Add Question Modal -->
+  <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addQuestionModalLabel">Add New Question</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Corrected form field names to match the database and routes -->
+          <form action="{{ url_for('manage_questions', quiz_id=quiz_id) }}" method="POST">
+            <div class="mb-3">
+              <label for="questionText" class="form-label">Question Text</label>
+              <textarea class="form-control" id="questionText" name="question_statement" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="optionA" class="form-label">Option A</label>
+              <input type="text" class="form-control" id="optionA" name="option1" required>
+            </div>
+            <div class="mb-3">
+              <label for="optionB" class="form-label">Option B</label>
+              <input type="text" class="form-control" id="optionB" name="option2" required>
+            </div>
+            <div class="mb-3">
+              <label for="optionC" class="form-label">Option C</label>
+              <input type="text" class="form-control" id="optionC" name="option3" required>
+            </div>
+            <div class="mb-3">
+              <label for="optionD" class="form-label">Option D</label>
+              <input type="text" class="form-control" id="optionD" name="option4" required>
+            </div>
+            <div class="mb-3">
+              <label for="correctOption" class="form-label">Correct Answer</label>
+              <input type="text" class="form-control" id="correctOption" name="correct_answer" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Question</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Question Modal -->
+  <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editQuestionForm" method="POST">
+            <input type="hidden" id="editQuestionId" name="question_id">
+            <div class="mb-3">
+              <label for="editQuestionText" class="form-label">Question Text</label>
+              <textarea class="form-control" id="editQuestionText" name="question_statement" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editOptionA" class="form-label">Option A</label>
+              <input type="text" class="form-control" id="editOptionA" name="option1" required>
+            </div>
+            <div class="mb-3">
+              <label for="editOptionB" class="form-label">Option B</label>
+              <input type="text" class="form-control" id="editOptionB" name="option2" required>
+            </div>
+            <div class="mb-3">
+              <label for="editOptionC" class="form-label">Option C</label>
+              <input type="text" class="form-control" id="editOptionC" name="option3" required>
+            </div>
+            <div class="mb-3">
+              <label for="editOptionD" class="form-label">Option D</label>
+              <input type="text" class="form-control" id="editOptionD" name="option4" required>
+            </div>
+            <div class="mb-3">
+              <label for="editCorrectOption" class="form-label">Correct Answer</label>
+              <input type="text" class="form-control" id="editCorrectOption" name="correct_answer" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Question</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>  
+
+  <!-- Delete Question Modal -->
+  <div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-labelledby="deleteQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteQuestionModalLabel">Confirm Deletion</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete the question: <strong id="deleteQuestionText"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a href="#" id="confirmDeleteQuestionBtn" class="btn btn-danger">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Custom Script for Modals -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      let editQuestionModal = new bootstrap.Modal(document.getElementById("editQuestionModal"));
+      let deleteQuestionModal = new bootstrap.Modal(document.getElementById("deleteQuestionModal"));
+
+      // Handle Edit Question Modal
+      document.querySelectorAll(".btn-edit").forEach(button => {
+        button.addEventListener("click", function () {
+          document.getElementById("editQuestionId").value = this.getAttribute("data-id");
+          document.getElementById("editQuestionText").value = this.getAttribute("data-text");
+          document.getElementById("editOptionA").value = this.getAttribute("data-option1");
+          document.getElementById("editOptionB").value = this.getAttribute("data-option2");
+          document.getElementById("editOptionC").value = this.getAttribute("data-option3");
+          document.getElementById("editOptionD").value = this.getAttribute("data-option4");
+          document.getElementById("editCorrectOption").value = this.getAttribute("data-correct");
+          document.getElementById("editQuestionForm").action = `/admin/edit_question/${this.getAttribute("data-id")}`;
+          editQuestionModal.show();
+        });
+      });
+
+      // Handle Delete Question Modal
+      document.querySelectorAll(".btn-delete").forEach(button => {
+        button.addEventListener("click", function () {
+          let questionId = this.getAttribute("data-id");
+          let questionText = this.getAttribute("data-text");
+          document.getElementById("deleteQuestionText").textContent = questionText;
+          document.getElementById("confirmDeleteQuestionBtn").href = `/admin/delete_question/${questionId}`;
+          deleteQuestionModal.show();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
