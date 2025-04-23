@@ -1,5 +1,5 @@
 
-# 🎓 Quiz Master App - MAD1
+# 🎓 Quiz Master App - MAD1 IITM BS
 
 A full-featured, multi-user **exam preparation platform** built with **Flask**, **Jinja2**, **SQLite**, and **Bootstrap**. Designed for students to test their knowledge and for admins to manage quizzes and track performance effectively.
 
